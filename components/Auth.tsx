@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { Mail, Github, Chrome, Globe, Cpu, ArrowRight } from 'lucide-react';
+import { Mail, Shield, Globe, Cpu, ArrowRight, Fingerprint } from 'lucide-react';
 import { BRAND_NAME } from '../constants';
 import { supabase } from '../services/supabase';
 
@@ -58,7 +58,7 @@ const Auth: React.FC<AuthProps> = ({ onLogin }) => {
     setIsLoading(false);
   };
 
-  const handleGoogleLogin = async () => {
+  const handleSSOLogin = async () => {
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
@@ -87,8 +87,8 @@ const Auth: React.FC<AuthProps> = ({ onLogin }) => {
             The Future of <span className="text-blue-500">Universal</span> Communication.
           </h2>
           <p className="text-gray-400 text-xl leading-relaxed">
-            Breaking language barriers in real-time with Gemini Live. 
-            Experience conversation without limits with Eburon.
+            Breaking language barriers in real-time with Eburon Live. 
+            Experience conversation without limits with the Eburon ecosystem.
           </p>
         </div>
       </div>
@@ -112,7 +112,7 @@ const Auth: React.FC<AuthProps> = ({ onLogin }) => {
               <input 
                 type="email" 
                 required
-                placeholder="name@company.com"
+                placeholder="name@eburon.ai"
                 className="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-4 py-3 text-white placeholder:text-zinc-600 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
@@ -145,11 +145,11 @@ const Auth: React.FC<AuthProps> = ({ onLogin }) => {
 
           <div className="grid grid-cols-1 gap-4">
             <button 
-              onClick={handleGoogleLogin}
+              onClick={handleSSOLogin}
               className="flex items-center justify-center gap-3 bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 py-3 rounded-xl transition-all font-medium active:scale-[0.98]"
             >
-              <Chrome className="w-5 h-5 text-red-400" />
-              Sign in with Google
+              <Fingerprint className="w-5 h-5 text-blue-400" />
+              Eburon Single Sign-On
             </button>
           </div>
 

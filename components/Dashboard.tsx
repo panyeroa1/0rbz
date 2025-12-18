@@ -13,7 +13,8 @@ import {
   Monitor,
   Mic,
   LayoutGrid,
-  Loader2
+  Loader2,
+  Sparkles
 } from 'lucide-react';
 import { User, MeetingConfig } from '../types';
 import { BRAND_NAME, LANGUAGES } from '../constants';
@@ -220,7 +221,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onJoinMeeting, onLogout }) 
                   <div className="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center text-[10px] font-bold ring-2 ring-black">AI</div>
                   <div className="w-8 h-8 rounded-full bg-green-500 flex items-center justify-center text-[10px] font-bold ring-2 ring-black">LLM</div>
                 </div>
-                <span>Gemini 2.5 Live enabled</span>
+                <span>Eburon Live AI enabled</span>
               </div>
             </div>
           </div>
@@ -228,7 +229,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onJoinMeeting, onLogout }) 
           <div className="bg-gradient-to-br from-zinc-900 to-black border border-zinc-800 rounded-3xl p-8 relative overflow-hidden group">
             <div className="absolute top-0 left-0 w-full h-1 bg-blue-500"></div>
             <h4 className="font-bold mb-2">Upcoming Meeting</h4>
-            <p className="text-zinc-500 text-sm mb-4">Syncing with Supabase Sessions...</p>
+            <p className="text-zinc-500 text-sm mb-4">Syncing with Eburon Sessions...</p>
             <div className="space-y-3">
               <div className="text-center py-4 text-zinc-600 text-xs italic">
                 No scheduled meetings found.

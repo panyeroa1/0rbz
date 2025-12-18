@@ -43,7 +43,7 @@ const MeetingRoom: React.FC<MeetingRoomProps> = ({ user, config, onLeave }) => {
         if (videoRef.current) {
           videoRef.current.srcObject = stream;
         }
-        setupGeminiLive(stream);
+        setupEburonLive(stream);
       } catch (err) {
         console.error("Error accessing media devices:", err);
       }
@@ -54,7 +54,7 @@ const MeetingRoom: React.FC<MeetingRoomProps> = ({ user, config, onLeave }) => {
     };
   }, []);
 
-  const setupGeminiLive = useCallback(async (stream: MediaStream) => {
+  const setupEburonLive = useCallback(async (stream: MediaStream) => {
     if (!process.env.API_KEY) return;
     
     const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
@@ -114,8 +114,8 @@ const MeetingRoom: React.FC<MeetingRoomProps> = ({ user, config, onLeave }) => {
             setActiveTranscription('');
           }
         },
-        onerror: (e) => console.error("Gemini Error:", e),
-        onclose: () => console.log("Gemini Connection Closed")
+        onerror: (e) => console.error("Eburon AI Error:", e),
+        onclose: () => console.log("Eburon Connection Closed")
       }
     });
 
