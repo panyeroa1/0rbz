@@ -1,9 +1,9 @@
-
 import React, { useState } from 'react';
 import { 
   Mic, MicOff, Video, VideoOff, ScreenShare, 
   MessageSquare, Users, Hand, Shield, Grid, 
-  Settings, Smile, MoreVertical, Layout
+  Settings, Smile, MoreVertical, Layout,
+  Circle, Pause, Square
 } from 'lucide-react';
 
 interface DockProps {
@@ -15,6 +15,13 @@ interface DockProps {
   onToggleParticipants: () => void;
   isParticipantsActive: boolean;
   participantCount: number;
+  
+  // Recording Props
+  isRecording: boolean;
+  isRecordingPaused: boolean;
+  onStartRecording: () => void;
+  onPauseRecording: () => void;
+  onStopRecording: () => void;
 }
 
 const Dock: React.FC<DockProps> = ({ 
@@ -25,7 +32,12 @@ const Dock: React.FC<DockProps> = ({
   targetLanguage,
   onToggleParticipants,
   isParticipantsActive,
-  participantCount
+  participantCount,
+  isRecording,
+  isRecordingPaused,
+  onStartRecording,
+  onPauseRecording,
+  onStopRecording
 }) => {
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
 
@@ -82,6 +94,35 @@ const Dock: React.FC<DockProps> = ({
               </button>
             );
           })}
+          
+          <div className="w-px h-8 bg-white/10 mx-2"></div>
+
+          {/* Recording Controls */}
+          <div className="flex items-center gap-1 px-1">
+            {!isRecording ? (
+               <button 
+                onClick={onStartRecording}
+                className="p-4 rounded-2xl hover:bg-white/10 transition-all group flex items-center justify-center"
+               >
+                 <Circle className="w-6 h-6 text-red-500 group-hover:scale-110 transition-transform" />
+               </button>
+            ) : (
+              <div className="flex items-center gap-1 bg-red-500/10 rounded-2xl p-1 border border-red-500/20">
+                <button 
+                  onClick={onPauseRecording}
+                  className="p-3 rounded-xl hover:bg-white/10 transition-all flex items-center justify-center"
+                >
+                  {isRecordingPaused ? <Circle className="w-5 h-5 text-red-500 animate-pulse" /> : <Pause className="w-5 h-5 text-white" />}
+                </button>
+                <button 
+                  onClick={onStopRecording}
+                  className="p-3 rounded-xl hover:bg-white/10 transition-all flex items-center justify-center"
+                >
+                  <Square className="w-5 h-5 text-white" />
+                </button>
+              </div>
+            )}
+          </div>
           
           <div className="w-px h-8 bg-white/10 mx-2"></div>
           

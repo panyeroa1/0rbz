@@ -1,6 +1,6 @@
 
 export const BRAND_NAME = "Eburon";
-export const GEMINI_MODEL = "gemini-2.5-flash-native-audio-preview-09-2025";
+export const GEMINI_MODEL = "gemini-2.5-flash-native-audio-preview-12-2025";
 
 export const LANGUAGES = [
   { code: 'en', name: 'English' },
