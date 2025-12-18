@@ -1,6 +1,14 @@
 
-export const BRAND_NAME = "Eburon";
-export const GEMINI_MODEL = "gemini-2.5-flash-native-audio-preview-12-2025";
+export const BRAND_NAME = "Orbit";
+export const GEMINI_MODEL = "gemini-2.5-flash-native-audio-preview-09-2025";
+
+export const ORBIT_VOICES = [
+  { id: 'Kore', alias: 'Persephone', metal: 'Gold', gender: 'Female' },
+  { id: 'Puck', alias: 'Iris', metal: 'Silver', gender: 'Female' },
+  { id: 'Zephyr', alias: 'Athena', metal: 'Platinum', gender: 'Female' },
+  { id: 'Charon', alias: 'Hestia', metal: 'Palladium', gender: 'Female' },
+  { id: 'Fenrir', alias: 'Artemis', metal: 'Iridium', gender: 'Female' }
+];
 
 export const LANGUAGES = [
   { code: 'en', name: 'English' },

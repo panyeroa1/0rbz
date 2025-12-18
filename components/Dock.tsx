@@ -1,10 +1,11 @@
+
 import React, { useState } from 'react';
 import { 
   Mic, MicOff, Video, VideoOff, ScreenShare, 
-  MessageSquare, Users, Hand, Shield, Grid, 
-  Settings, Smile, MoreVertical, Layout,
-  Circle, Pause, Square, MonitorOff
+  MessageSquare, Users, Settings, Smile, Layout,
+  Circle, Square, MonitorOff, ChevronUp, Globe
 } from 'lucide-react';
+import { ORBIT_VOICES } from '../constants';
 
 interface DockProps {
   isMuted: boolean;
@@ -15,132 +16,106 @@ interface DockProps {
   onToggleParticipants: () => void;
   isParticipantsActive: boolean;
   participantCount: number;
-  
-  // Recording Props
   isRecording: boolean;
-  isRecordingPaused: boolean;
   onStartRecording: () => void;
-  onPauseRecording: () => void;
   onStopRecording: () => void;
-
-  // Screen Share Props
   isSharingScreen: boolean;
   onScreenShareToggle: () => void;
+  selectedVoice: string;
+  onVoiceChange: (voice: string) => void;
 }
 
 const Dock: React.FC<DockProps> = ({ 
-  isMuted, 
-  onMuteToggle, 
-  isVideoOff, 
-  onVideoToggle, 
-  targetLanguage,
-  onToggleParticipants,
-  isParticipantsActive,
-  participantCount,
-  isRecording,
-  isRecordingPaused,
-  onStartRecording,
-  onPauseRecording,
-  onStopRecording,
-  isSharingScreen,
-  onScreenShareToggle
+  isMuted, onMuteToggle, isVideoOff, onVideoToggle, targetLanguage,
+  onToggleParticipants, isParticipantsActive, participantCount,
+  isRecording, onStartRecording, onStopRecording,
+  isSharingScreen, onScreenShareToggle,
+  selectedVoice, onVoiceChange
 }) => {
-  const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
+  const [showVoiceMenu, setShowVoiceMenu] = useState(false);
 
-  const items = [
-    { id: 1, name: 'Mute', icon: isMuted ? MicOff : Mic, color: isMuted ? 'text-red-500' : 'text-white', action: onMuteToggle, bg: isMuted ? 'bg-red-500/10' : 'bg-transparent' },
-    { id: 2, name: 'Video', icon: isVideoOff ? VideoOff : Video, color: isVideoOff ? 'text-red-500' : 'text-white', action: onVideoToggle, bg: isVideoOff ? 'bg-red-500/10' : 'bg-transparent' },
-    { id: 3, name: isSharingScreen ? 'Stop Sharing' : 'Share Screen', icon: isSharingScreen ? MonitorOff : ScreenShare, color: isSharingScreen ? 'text-blue-400' : 'text-white', action: onScreenShareToggle, bg: isSharingScreen ? 'bg-blue-500/10' : 'bg-transparent' },
-    { id: 4, name: 'Layout', icon: Layout, color: 'text-white', action: () => {}, bg: 'bg-transparent' },
-    { id: 5, name: 'Chat', icon: MessageSquare, color: 'text-white', action: () => {}, bg: 'bg-transparent', badge: 0 },
-    { id: 6, name: 'People', icon: Users, color: isParticipantsActive ? 'text-blue-400' : 'text-white', action: onToggleParticipants, bg: isParticipantsActive ? 'bg-blue-500/10' : 'bg-transparent', badge: participantCount },
-    { id: 7, name: 'React', icon: Smile, color: 'text-white', action: () => {}, bg: 'bg-transparent' },
-    { id: 8, name: 'Settings', icon: Settings, color: 'text-white', action: () => {}, bg: 'bg-transparent' },
-  ];
+  const activeVoiceObj = ORBIT_VOICES.find(v => v.id === selectedVoice);
 
   return (
-    <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-50">
-      <div className="relative group">
-        <div className="absolute -inset-1 bg-gradient-to-r from-blue-600 to-purple-600 rounded-[32px] blur opacity-20 group-hover:opacity-40 transition duration-1000"></div>
+    <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-50 w-full flex justify-center px-4">
+      <div className="relative flex items-center gap-2 bg-black/40 backdrop-blur-3xl border border-white/10 p-2 rounded-[32px] shadow-2xl">
         
-        <div className="relative bg-black/60 backdrop-blur-3xl border border-white/10 px-4 py-3 rounded-[28px] flex items-center gap-1.5 shadow-2xl">
-          {items.map((item, index) => {
-            const Icon = item.icon;
-            const isHovered = hoveredIndex === index;
-            const isNeighbor = hoveredIndex !== null && Math.abs(hoveredIndex - index) === 1;
-            
-            return (
-              <button
-                key={item.id}
-                onMouseEnter={() => setHoveredIndex(index)}
-                onMouseLeave={() => setHoveredIndex(null)}
-                onClick={item.action}
-                style={{
-                    transform: isHovered ? 'scale(1.25) translateY(-8px)' : isNeighbor ? 'scale(1.1) translateY(-4px)' : 'scale(1)',
-                    transition: 'all 0.2s cubic-bezier(0.17, 0.67, 0.83, 0.67)'
-                }}
-                className={`
-                  relative p-4 rounded-2xl flex items-center justify-center
-                  hover:bg-white/10 transition-colors
-                  ${item.bg}
-                `}
-              >
-                <Icon className={`w-6 h-6 ${item.color}`} />
-                {item.badge !== undefined && item.badge > 0 && (
-                  <span className="absolute top-2 right-2 min-w-[18px] h-[18px] bg-blue-500 text-[10px] font-bold rounded-full flex items-center justify-center ring-2 ring-black px-1">
-                    {item.badge}
-                  </span>
-                )}
-                
-                {isHovered && (
-                   <div className="absolute -top-12 left-1/2 -translate-x-1/2 px-3 py-1 bg-white text-black text-[10px] font-bold rounded-lg whitespace-nowrap opacity-0 animate-in fade-in slide-in-from-bottom-2 duration-200 fill-mode-forwards shadow-xl">
-                     {item.name}
-                   </div>
-                )}
-              </button>
-            );
-          })}
-          
-          <div className="w-px h-8 bg-white/10 mx-2"></div>
+        {/* Main Controls */}
+        <div className="flex items-center gap-1">
+          <button onClick={onMuteToggle} className={`p-4 rounded-2xl transition-all ${isMuted ? 'bg-red-500/20 text-red-500' : 'hover:bg-white/10'}`}>
+            {isMuted ? <MicOff className="w-6 h-6" /> : <Mic className="w-6 h-6" />}
+          </button>
+          <button onClick={onVideoToggle} className={`p-4 rounded-2xl transition-all ${isVideoOff ? 'bg-red-500/20 text-red-500' : 'hover:bg-white/10'}`}>
+            {isVideoOff ? <VideoOff className="w-6 h-6" /> : <Video className="w-6 h-6" />}
+          </button>
+          <button onClick={onScreenShareToggle} className={`p-4 rounded-2xl transition-all ${isSharingScreen ? 'bg-blue-500/20 text-blue-500' : 'hover:bg-white/10'}`}>
+            {isSharingScreen ? <MonitorOff className="w-6 h-6" /> : <ScreenShare className="w-6 h-6" />}
+          </button>
+        </div>
 
-          {/* Recording Controls */}
-          <div className="flex items-center gap-1 px-1">
-            {!isRecording ? (
-               <button 
-                onClick={onStartRecording}
-                className="p-4 rounded-2xl hover:bg-white/10 transition-all group flex items-center justify-center"
-               >
-                 <Circle className="w-6 h-6 text-red-500 group-hover:scale-110 transition-transform" />
-               </button>
-            ) : (
-              <div className="flex items-center gap-1 bg-red-500/10 rounded-2xl p-1 border border-red-500/20">
-                <button 
-                  onClick={onPauseRecording}
-                  className="p-3 rounded-xl hover:bg-white/10 transition-all flex items-center justify-center"
-                >
-                  {isRecordingPaused ? <Circle className="w-5 h-5 text-red-500 animate-pulse" /> : <Pause className="w-5 h-5 text-white" />}
-                </button>
-                <button 
-                  onClick={onStopRecording}
-                  className="p-3 rounded-xl hover:bg-white/10 transition-all flex items-center justify-center"
-                >
-                  <Square className="w-5 h-5 text-white" />
-                </button>
+        <div className="w-px h-8 bg-white/10 mx-1"></div>
+
+        {/* AI Voice Selector */}
+        <div className="relative group">
+          <button 
+            onClick={() => setShowVoiceMenu(!showVoiceMenu)}
+            className="flex items-center gap-3 px-4 py-3 bg-white/5 hover:bg-white/10 rounded-2xl transition-all border border-white/5"
+          >
+            <div className="flex flex-col items-start">
+              <span className="text-[10px] font-black uppercase text-blue-400 tracking-widest">AI Voice</span>
+              <span className="text-sm font-bold text-white leading-tight">{activeVoiceObj?.alias}</span>
+            </div>
+            <ChevronUp className={`w-4 h-4 text-zinc-500 transition-transform ${showVoiceMenu ? 'rotate-180' : ''}`} />
+          </button>
+
+          {showVoiceMenu && (
+            <div className="absolute bottom-full mb-4 left-0 w-64 bg-black/80 backdrop-blur-3xl border border-white/10 rounded-3xl p-3 shadow-2xl animate-in fade-in slide-in-from-bottom-4">
+              <h3 className="text-[10px] font-black text-zinc-500 uppercase tracking-[0.2em] mb-3 px-2">Greek Goddess Frequency</h3>
+              <div className="space-y-1">
+                {ORBIT_VOICES.map((v) => (
+                  <button
+                    key={v.id}
+                    onClick={() => { onVoiceChange(v.id); setShowVoiceMenu(false); }}
+                    className={`w-full flex items-center justify-between p-3 rounded-xl transition-all ${selectedVoice === v.id ? 'bg-blue-600/20 text-blue-400 border border-blue-500/30' : 'hover:bg-white/5 text-zinc-400'}`}
+                  >
+                    <div className="flex flex-col items-start">
+                      <span className="text-sm font-bold">{v.alias}</span>
+                      <span className="text-[10px] opacity-60 uppercase">{v.metal} Nucleus</span>
+                    </div>
+                    {selectedVoice === v.id && <div className="w-2 h-2 bg-blue-500 rounded-full shadow-[0_0_8px_#3b82f6]"></div>}
+                  </button>
+                ))}
               </div>
-            )}
-          </div>
-          
-          <div className="w-px h-8 bg-white/10 mx-2"></div>
-          
-          <div className="flex items-center gap-3 pr-2 pl-2">
-            <div className="flex flex-col items-end">
-              <span className="text-[10px] uppercase font-bold text-blue-400 tracking-tighter">AI Translating to</span>
-              <span className="text-xs font-bold text-white uppercase">{targetLanguage}</span>
             </div>
-            <div className="w-8 h-8 rounded-full bg-blue-500/10 border border-blue-500/30 flex items-center justify-center">
-              <div className="w-1.5 h-1.5 bg-blue-500 rounded-full animate-ping"></div>
-            </div>
-          </div>
+          )}
+        </div>
+
+        <div className="w-px h-8 bg-white/10 mx-1"></div>
+
+        {/* Recording & Secondary */}
+        <div className="flex items-center gap-1">
+          <button onClick={onToggleParticipants} className={`p-4 rounded-2xl transition-all relative ${isParticipantsActive ? 'text-blue-400 bg-blue-500/10' : 'hover:bg-white/10'}`}>
+            <Users className="w-6 h-6" />
+            {participantCount > 0 && <span className="absolute top-3 right-3 w-4 h-4 bg-blue-600 text-[10px] font-bold rounded-full flex items-center justify-center">{participantCount}</span>}
+          </button>
+          
+          <div className="w-px h-8 bg-white/10 mx-1"></div>
+
+          <button 
+            onClick={isRecording ? onStopRecording : onStartRecording}
+            className={`p-4 rounded-2xl transition-all group ${isRecording ? 'bg-red-500/20' : 'hover:bg-white/10'}`}
+          >
+            {isRecording ? <Square className="w-6 h-6 text-red-500" /> : <Circle className="w-6 h-6 text-red-500 group-hover:scale-110" />}
+          </button>
+        </div>
+
+        {/* Translation Indicator */}
+        <div className="flex flex-col items-end px-4 border-l border-white/10 ml-1">
+           <span className="text-[10px] font-black text-zinc-500 uppercase tracking-tighter">Translation</span>
+           <div className="flex items-center gap-1.5">
+             <Globe className="w-3 h-3 text-blue-500" />
+             <span className="text-sm font-black text-white uppercase">{targetLanguage}</span>
+           </div>
         </div>
       </div>
     </div>

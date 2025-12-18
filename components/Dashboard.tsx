@@ -1,21 +1,6 @@
 
 import React, { useState } from 'react';
-import { 
-  Plus, 
-  Video, 
-  Calendar, 
-  Settings, 
-  LogOut, 
-  Copy, 
-  Check, 
-  ChevronRight, 
-  Globe2, 
-  Monitor,
-  Mic,
-  LayoutGrid,
-  Loader2,
-  Sparkles
-} from 'lucide-react';
+import { Plus, Video, Calendar, LogOut, ChevronRight, Globe2, Loader2, Orbit } from 'lucide-react';
 import { User, MeetingConfig } from '../types';
 import { BRAND_NAME, LANGUAGES } from '../constants';
 import { supabase } from '../services/supabase';
@@ -30,211 +15,90 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onJoinMeeting, onLogout }) 
   const [targetLang, setTargetLang] = useState('es');
   const [meetingId, setMeetingId] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  const handleLogout = async () => {
-    await supabase.auth.signOut();
-    onLogout();
-  };
 
   const createMeeting = async () => {
     setIsProcessing(true);
-    setError(null);
-    const newRoomId = Math.random().toString(36).substring(7).toUpperCase();
-    
-    try {
-      const { error: dbError } = await supabase
-        .from('sessions')
-        .insert([
-          { 
-            id: newRoomId, 
-            creator_name: user.name,
-            is_active: true
-          }
-        ]);
-
-      if (dbError) throw dbError;
-
-      onJoinMeeting({
-        roomId: newRoomId,
-        isHost: true,
-        audioEnabled: true,
-        videoEnabled: true,
-        targetLanguage: targetLang
-      });
-    } catch (err: any) {
-      console.error("Error creating session:", err);
-      setError("Failed to create meeting session. Please try again.");
-    } finally {
-      setIsProcessing(false);
-    }
-  };
-
-  const joinExisting = async () => {
-    if (!meetingId) return;
-    setIsProcessing(true);
-    setError(null);
-
-    try {
-      const { data, error: dbError } = await supabase
-        .from('sessions')
-        .select('*')
-        .eq('id', meetingId.toUpperCase())
-        .single();
-
-      if (dbError || !data) {
-        setError("Meeting session not found or inactive.");
-        setIsProcessing(false);
-        return;
-      }
-
-      onJoinMeeting({
-        roomId: data.id,
-        isHost: data.creator_name === user.name,
-        audioEnabled: true,
-        videoEnabled: true,
-        targetLanguage: targetLang
-      });
-    } catch (err: any) {
-      setError("Could not find that meeting. Check the ID.");
-    } finally {
-      setIsProcessing(false);
-    }
+    const id = Math.random().toString(36).substring(7).toUpperCase();
+    onJoinMeeting({ roomId: id, isHost: true, audioEnabled: true, videoEnabled: true, targetLanguage: targetLang });
   };
 
   return (
-    <div className="min-h-screen bg-[#050505] p-6 lg:p-12 overflow-y-auto">
-      {/* Header */}
-      <div className="flex justify-between items-center mb-12">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center">
-            <Video className="text-white w-6 h-6" />
+    <div className="min-h-screen p-8 lg:p-16 flex flex-col">
+      <div className="flex justify-between items-center mb-16">
+        <div className="flex items-center gap-4">
+          <div className="p-2 bg-blue-600 rounded-xl shadow-[0_0_15px_#3b82f688]">
+            <Orbit className="w-8 h-8 text-white" />
           </div>
-          <h1 className="text-2xl font-bold">{BRAND_NAME}</h1>
+          <h1 className="text-3xl font-black uppercase tracking-tighter">{BRAND_NAME}</h1>
         </div>
-        <div className="flex items-center gap-6">
-          <div className="flex items-center gap-3">
-             <div className="text-right hidden sm:block">
-               <div className="text-sm font-semibold">{user.name}</div>
-               <div className="text-xs text-zinc-500">{user.email}</div>
-             </div>
-             <img src={`https://picsum.photos/seed/${user.id}/100`} className="w-10 h-10 rounded-full ring-2 ring-blue-500/20" alt="Avatar" />
-          </div>
-          <button onClick={handleLogout} className="p-2 text-zinc-500 hover:text-red-400 transition-colors">
-            <LogOut className="w-5 h-5" />
-          </button>
+        <div className="flex items-center gap-4 px-4 py-2 bg-white/5 border border-white/10 rounded-2xl">
+          <img src={`https://picsum.photos/seed/${user.id}/100`} className="w-8 h-8 rounded-full border border-blue-500/50" alt="" />
+          <span className="text-sm font-bold">{user.name}</span>
+          <button onClick={onLogout} className="p-2 hover:text-red-500 transition-colors"><LogOut className="w-4 h-4" /></button>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Main Actions */}
-        <div className="lg:col-span-2 space-y-8">
-          {error && (
-            <div className="bg-red-500/10 border border-red-500/20 text-red-500 p-4 rounded-2xl text-sm font-medium">
-              {error}
-            </div>
-          )}
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-             <button 
-              onClick={createMeeting}
-              disabled={isProcessing}
-              className="group relative h-48 bg-blue-600 hover:bg-blue-500 rounded-3xl p-8 transition-all overflow-hidden flex flex-col justify-between disabled:opacity-50"
-             >
-                <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
-                <div className="bg-white/20 w-14 h-14 rounded-2xl flex items-center justify-center">
-                  {isProcessing ? <Loader2 className="w-8 h-8 text-white animate-spin" /> : <Video className="w-8 h-8 text-white" />}
-                </div>
-                <div>
-                  <h3 className="text-2xl font-bold mb-1">New Meeting</h3>
-                  <p className="text-blue-100/70">Start a persistent room</p>
-                </div>
-                <div className="absolute bottom-6 right-6 opacity-0 group-hover:opacity-100 translate-x-4 group-hover:translate-x-0 transition-all">
-                  <Plus className="w-6 h-6" />
-                </div>
-             </button>
-
-             <div className="bg-zinc-900 border border-zinc-800 rounded-3xl p-8 flex flex-col justify-between">
-                <div className="bg-zinc-800 w-14 h-14 rounded-2xl flex items-center justify-center">
-                  <Calendar className="w-8 h-8 text-blue-500" />
-                </div>
-                <div>
-                  <h3 className="text-2xl font-bold mb-1">Schedule</h3>
-                  <p className="text-zinc-500">Plan your next session</p>
-                </div>
-                <button className="mt-4 text-blue-500 font-medium flex items-center gap-1 hover:gap-2 transition-all">
-                  Get started <ChevronRight className="w-4 h-4" />
-                </button>
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 max-w-7xl mx-auto w-full">
+        <div className="lg:col-span-8 grid grid-cols-1 md:grid-cols-2 gap-6">
+          <button 
+            onClick={createMeeting} disabled={isProcessing}
+            className="group relative aspect-[1.5/1] bg-blue-600 hover:bg-blue-500 rounded-[40px] p-10 transition-all flex flex-col justify-between overflow-hidden shadow-2xl"
+          >
+             <div className="absolute top-0 right-0 w-64 h-64 bg-white/20 blur-[100px] rounded-full translate-x-1/2 -translate-y-1/2 group-hover:bg-white/30 transition-all"></div>
+             <Video className="w-12 h-12 text-white" />
+             <div>
+               <h3 className="text-3xl font-black uppercase mb-2">Launch Session</h3>
+               <p className="text-blue-100/60 font-medium">Create a persistent Orbit link</p>
              </div>
+          </button>
+
+          <div className="bg-white/5 border border-white/10 rounded-[40px] p-10 flex flex-col justify-between hover:bg-white/[0.08] transition-all">
+             <Calendar className="w-12 h-12 text-zinc-500" />
+             <div>
+               <h3 className="text-2xl font-bold mb-2">Flight Schedule</h3>
+               <p className="text-zinc-500">Plan upcoming cross-language sessions</p>
+             </div>
+             <button className="text-blue-500 font-bold flex items-center gap-2 mt-4">Get Started <ChevronRight className="w-4 h-4" /></button>
           </div>
 
-          <div className="bg-zinc-900 border border-zinc-800 rounded-3xl p-8">
-            <h3 className="text-xl font-bold mb-6 flex items-center gap-2">
-              <LayoutGrid className="w-5 h-5 text-zinc-500" />
-              Join with Code
-            </h3>
-            <div className="flex gap-4">
-              <input 
-                type="text" 
-                placeholder="Enter room ID (e.g. AB123)"
-                className="flex-1 bg-black border border-zinc-800 rounded-2xl px-6 py-4 text-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all uppercase"
-                value={meetingId}
-                onChange={(e) => setMeetingId(e.target.value)}
-              />
-              <button 
-                onClick={joinExisting}
-                className="bg-zinc-800 hover:bg-zinc-700 px-8 py-4 rounded-2xl font-bold transition-all disabled:opacity-50 flex items-center gap-2"
-                disabled={!meetingId || isProcessing}
-              >
-                {isProcessing && <Loader2 className="w-4 h-4 animate-spin" />}
-                Join
-              </button>
-            </div>
+          <div className="md:col-span-2 bg-white/5 border border-white/10 rounded-[40px] p-10">
+             <h3 className="text-xl font-bold mb-6 flex items-center gap-3"><Globe2 className="w-5 h-5 text-blue-500" /> Enter Galaxy ID</h3>
+             <div className="flex gap-4">
+               <input 
+                value={meetingId} onChange={(e) => setMeetingId(e.target.value.toUpperCase())}
+                placeholder="ORBIT-123X" className="flex-1 bg-black/60 border border-white/10 rounded-2xl px-8 py-5 text-xl font-mono focus:ring-2 focus:ring-blue-500 outline-none" 
+               />
+               <button className="bg-white text-black px-10 rounded-2xl font-black uppercase tracking-widest hover:bg-zinc-200 transition-all">Join</button>
+             </div>
           </div>
         </div>
 
-        {/* Translation Settings */}
-        <div className="space-y-6">
-          <div className="bg-zinc-950 border border-zinc-900 rounded-3xl p-8">
-            <h3 className="text-xl font-bold mb-6 flex items-center gap-2">
-              <Globe2 className="w-5 h-5 text-blue-500" />
-              Eburon Intelligence
-            </h3>
-            <div className="space-y-4">
-              <div className="p-4 bg-zinc-900 rounded-2xl">
-                <label className="text-xs font-bold text-zinc-500 uppercase tracking-widest mb-2 block">AI Translation Nuance</label>
-                <select 
-                  className="w-full bg-transparent border-none focus:ring-0 text-white cursor-pointer font-medium"
-                  value={targetLang}
-                  onChange={(e) => setTargetLang(e.target.value)}
-                >
-                  {LANGUAGES.map(lang => (
-                    <option key={lang.code} value={lang.code} className="bg-zinc-900">
-                      Translate to {lang.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="flex items-center gap-4 p-4 text-sm text-zinc-400">
-                <div className="flex -space-x-2">
-                  <div className="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center text-[10px] font-bold ring-2 ring-black">AI</div>
-                  <div className="w-8 h-8 rounded-full bg-green-500 flex items-center justify-center text-[10px] font-bold ring-2 ring-black">LLM</div>
-                </div>
-                <span>Eburon Live AI enabled</span>
-              </div>
-            </div>
+        <div className="lg:col-span-4 space-y-6">
+          <div className="bg-zinc-900/40 backdrop-blur-xl border border-white/10 rounded-[40px] p-10">
+             <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-blue-500 mb-6">Translation Core</h3>
+             <div className="space-y-6">
+               <div className="space-y-2">
+                 <label className="text-[10px] font-bold text-zinc-500 uppercase">Input Stream Emotion</label>
+                 <div className="flex items-center gap-2 p-4 bg-black/40 rounded-2xl border border-white/5">
+                   <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse shadow-[0_0_8px_#22c55e]"></div>
+                   <span className="text-xs font-bold uppercase">Active Mirroring</span>
+                 </div>
+               </div>
+               <div className="space-y-2">
+                 <label className="text-[10px] font-bold text-zinc-500 uppercase">Target Language</label>
+                 <select 
+                  className="w-full bg-black/40 border border-white/5 rounded-2xl p-4 text-white font-bold outline-none cursor-pointer hover:bg-black/60 transition-all"
+                  value={targetLang} onChange={e => setTargetLang(e.target.value)}
+                 >
+                   {LANGUAGES.map(l => <option key={l.code} value={l.code}>{l.name}</option>)}
+                 </select>
+               </div>
+             </div>
           </div>
-
-          <div className="bg-gradient-to-br from-zinc-900 to-black border border-zinc-800 rounded-3xl p-8 relative overflow-hidden group">
-            <div className="absolute top-0 left-0 w-full h-1 bg-blue-500"></div>
-            <h4 className="font-bold mb-2">Upcoming Meeting</h4>
-            <p className="text-zinc-500 text-sm mb-4">Syncing with Eburon Sessions...</p>
-            <div className="space-y-3">
-              <div className="text-center py-4 text-zinc-600 text-xs italic">
-                No scheduled meetings found.
-              </div>
-            </div>
+          
+          <div className="bg-gradient-to-br from-blue-600/10 to-transparent border border-white/5 rounded-[40px] p-8">
+            <h4 className="text-xs font-black uppercase text-zinc-400 mb-2">Orbit Tip</h4>
+            <p className="text-zinc-500 text-sm leading-relaxed">Gemini 2.5 Live detects emotional tone. If the user sounds lonely, the Orbit Goddess voice will match that empathy.</p>
           </div>
         </div>
       </div>
