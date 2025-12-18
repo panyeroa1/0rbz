@@ -1,9 +1,9 @@
 
-import React, { useState, useEffect } from 'react';
-import Auth from './components/Auth';
-import Dashboard from './components/Dashboard';
-import MeetingRoom from './components/MeetingRoom';
-import { AppState, User, MeetingConfig } from './types';
+import React, { useState } from 'react';
+import Auth from './components/Auth.tsx';
+import Dashboard from './components/Dashboard.tsx';
+import MeetingRoom from './components/MeetingRoom.tsx';
+import { AppState, User, MeetingConfig } from './types.ts';
 
 const App: React.FC = () => {
   const [view, setView] = useState<AppState>('auth');
@@ -26,7 +26,7 @@ const App: React.FC = () => {
   };
 
   return (
-    <div className="h-screen w-full bg-[#050505] text-white selection:bg-blue-500/30">
+    <div className="flex-1 flex flex-col w-full h-full bg-[#050505] text-white selection:bg-blue-500/30 overflow-hidden relative">
       {view === 'auth' && <Auth onLogin={handleLogin} />}
       {view === 'dashboard' && user && (
         <Dashboard 

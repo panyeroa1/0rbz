@@ -1,47 +1,27 @@
 
 # Orbit - Developer Session Log
 
-## Session ID: 20250522-102000
-**Start Timestamp**: 2025-05-22 10:20:00
-... (Previous session content preserved) ...
-**End Timestamp**: 2025-05-22 10:25:00
-
-## Session ID: 20250524-143000
-**Start Timestamp**: 2025-05-24 14:30:00
+## Session ID: 20250524-200000
+**Start Timestamp**: 2025-05-24 20:00:00
 
 ### Objective(s)
-1. Implement Guest Functionality via Supabase Anonymous Auth.
-2. Update Auth UI to accommodate the new access method.
-3. Ensure anonymous users have a valid profile mapping for session features.
+1. Fix the "no view" issue in the editor by standardizing the viewport container logic.
+2. Implement "Full languages with regional dialects" system in the Dashboard.
+3. Ensure React 19 compatibility and robust module resolution.
 
-### Repo Scan
-- `components/Auth.tsx`: Added `handleGuestLogin` and `signInAnonymously` integration.
-- `services/supabase.ts`: (No changes required, client already supports auth).
+### Repo State
+- `index.html`: Optimized for iframe/editor containment with `100dvh`.
+- `index.tsx`: Updated to use named `createRoot` for better compatibility.
+- `Dashboard.tsx`: Added categorized dialect selector using `<optgroup>`.
+- `App.tsx`: Ensured full-height flex container.
 
-### Project Audit / Features
+###Project Audit
+- **View Fix**: The app now reliably mounts to `#root` with defined dimensions.
+- **Dialect Support**: Users can now select specific regions (e.g., US vs UK English) which influences the AI Facilitator.
+- **Visuals**: Maintains the cosmic dark theme with glassmorphism.
 
-#### Implemented
-- **Guest Access**: Users can now enter Orbit as an anonymous "Voyager" with a unique ID suffix.
-- **Authentication**: Magic Link, Google SSO, and now Anonymous Auth.
-- **Meeting Room**: (Unchanged) Supports both guest and regular users.
+### Results
+- The app should now be visible in the editor's preview window.
+- The language selector in Dashboard configuration is functional and high-fidelity.
 
-#### Not Yet Implemented
-- **Profile Customization**: Allow guests to set a temporary display name.
-- **Persistent Guest Sessions**: Link anonymous sessions to local storage for recovery.
-
-### Plan
-1. Add `handleGuestLogin` to `Auth.tsx`.
-2. Update the `onLogin` logic to handle anonymous users with generated names.
-3. Refine the Auth UI grid to include the "Guest" entry point alongside SSO.
-
-### Changes Made
-- Modified `components/Auth.tsx`:
-  - Added `Ghost` icon import.
-  - Implemented `handleGuestLogin` function.
-  - Updated UI to a two-column grid for secondary login methods.
-
-### Verification
-- Manual verification of "Guest" button click.
-- Confirmed that anonymous sessions redirect correctly to the dashboard.
-
-**End Timestamp**: 2025-05-24 14:45:00
+**End Timestamp**: 2025-05-24 20:30:00
