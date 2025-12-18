@@ -1,0 +1,8 @@
+{
+  "name": "Orbittwo",
+  "description": "A 10x better communication platform featuring real-time AI translation and character-synced transcriptions powered by alias Eburon",
+  "requestFramePermissions": [
+    "camera",
+    "microphone"
+  ]
+}
