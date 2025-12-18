@@ -12,26 +12,37 @@ interface DockProps {
   isVideoOff: boolean;
   onVideoToggle: () => void;
   targetLanguage: string;
+  onToggleParticipants: () => void;
+  isParticipantsActive: boolean;
+  participantCount: number;
 }
 
-const Dock: React.FC<DockProps> = ({ isMuted, onMuteToggle, isVideoOff, onVideoToggle, targetLanguage }) => {
+const Dock: React.FC<DockProps> = ({ 
+  isMuted, 
+  onMuteToggle, 
+  isVideoOff, 
+  onVideoToggle, 
+  targetLanguage,
+  onToggleParticipants,
+  isParticipantsActive,
+  participantCount
+}) => {
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
 
   const items = [
-    { id: 1, icon: isMuted ? MicOff : Mic, color: isMuted ? 'text-red-500' : 'text-white', action: onMuteToggle, bg: isMuted ? 'bg-red-500/10' : 'bg-transparent' },
-    { id: 2, icon: isVideoOff ? VideoOff : Video, color: isVideoOff ? 'text-red-500' : 'text-white', action: onVideoToggle, bg: isVideoOff ? 'bg-red-500/10' : 'bg-transparent' },
-    { id: 3, icon: ScreenShare, color: 'text-white', action: () => {}, bg: 'bg-transparent' },
-    { id: 4, icon: Layout, color: 'text-white', action: () => {}, bg: 'bg-transparent' },
-    { id: 5, icon: MessageSquare, color: 'text-white', action: () => {}, bg: 'bg-transparent', badge: 2 },
-    { id: 6, icon: Users, color: 'text-white', action: () => {}, bg: 'bg-transparent', badge: 3 },
-    { id: 7, icon: Smile, color: 'text-white', action: () => {}, bg: 'bg-transparent' },
-    { id: 8, icon: Settings, color: 'text-white', action: () => {}, bg: 'bg-transparent' },
+    { id: 1, name: 'Mute', icon: isMuted ? MicOff : Mic, color: isMuted ? 'text-red-500' : 'text-white', action: onMuteToggle, bg: isMuted ? 'bg-red-500/10' : 'bg-transparent' },
+    { id: 2, name: 'Video', icon: isVideoOff ? VideoOff : Video, color: isVideoOff ? 'text-red-500' : 'text-white', action: onVideoToggle, bg: isVideoOff ? 'bg-red-500/10' : 'bg-transparent' },
+    { id: 3, name: 'Share', icon: ScreenShare, color: 'text-white', action: () => {}, bg: 'bg-transparent' },
+    { id: 4, name: 'Layout', icon: Layout, color: 'text-white', action: () => {}, bg: 'bg-transparent' },
+    { id: 5, name: 'Chat', icon: MessageSquare, color: 'text-white', action: () => {}, bg: 'bg-transparent', badge: 0 },
+    { id: 6, name: 'People', icon: Users, color: isParticipantsActive ? 'text-blue-400' : 'text-white', action: onToggleParticipants, bg: isParticipantsActive ? 'bg-blue-500/10' : 'bg-transparent', badge: participantCount },
+    { id: 7, name: 'React', icon: Smile, color: 'text-white', action: () => {}, bg: 'bg-transparent' },
+    { id: 8, name: 'Settings', icon: Settings, color: 'text-white', action: () => {}, bg: 'bg-transparent' },
   ];
 
   return (
     <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-50">
       <div className="relative group">
-        {/* Subtle glow background */}
         <div className="absolute -inset-1 bg-gradient-to-r from-blue-600 to-purple-600 rounded-[32px] blur opacity-20 group-hover:opacity-40 transition duration-1000"></div>
         
         <div className="relative bg-black/60 backdrop-blur-3xl border border-white/10 px-4 py-3 rounded-[28px] flex items-center gap-1.5 shadow-2xl">
@@ -57,16 +68,15 @@ const Dock: React.FC<DockProps> = ({ isMuted, onMuteToggle, isVideoOff, onVideoT
                 `}
               >
                 <Icon className={`w-6 h-6 ${item.color}`} />
-                {item.badge && (
-                  <span className="absolute top-2 right-2 w-4 h-4 bg-blue-500 text-[10px] font-bold rounded-full flex items-center justify-center ring-2 ring-black">
+                {item.badge !== undefined && item.badge > 0 && (
+                  <span className="absolute top-2 right-2 min-w-[18px] h-[18px] bg-blue-500 text-[10px] font-bold rounded-full flex items-center justify-center ring-2 ring-black px-1">
                     {item.badge}
                   </span>
                 )}
                 
-                {/* Tooltip on hover */}
                 {isHovered && (
-                   <div className="absolute -top-12 left-1/2 -translate-x-1/2 px-3 py-1 bg-white text-black text-[10px] font-bold rounded-lg whitespace-nowrap opacity-0 animate-in fade-in slide-in-from-bottom-2 duration-200 fill-mode-forwards">
-                     {Icon.name}
+                   <div className="absolute -top-12 left-1/2 -translate-x-1/2 px-3 py-1 bg-white text-black text-[10px] font-bold rounded-lg whitespace-nowrap opacity-0 animate-in fade-in slide-in-from-bottom-2 duration-200 fill-mode-forwards shadow-xl">
+                     {item.name}
                    </div>
                 )}
               </button>

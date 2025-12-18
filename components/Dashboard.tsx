@@ -197,7 +197,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onJoinMeeting, onLogout }) 
           <div className="bg-zinc-950 border border-zinc-900 rounded-3xl p-8">
             <h3 className="text-xl font-bold mb-6 flex items-center gap-2">
               <Globe2 className="w-5 h-5 text-blue-500" />
-              Orbit Intelligence
+              Eburon Intelligence
             </h3>
             <div className="space-y-4">
               <div className="p-4 bg-zinc-900 rounded-2xl">

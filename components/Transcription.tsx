@@ -14,7 +14,7 @@ const Transcription: React.FC<TranscriptionProps> = ({ text }) => {
         <div className="bg-black/60 backdrop-blur-md border border-white/5 rounded-2xl p-6 shadow-2xl relative">
           {/* Subtle AI branding */}
           <div className="absolute -top-2 left-6 bg-blue-600 text-[8px] font-extrabold text-white px-2 py-0.5 rounded-full uppercase tracking-widest shadow-lg shadow-blue-500/20">
-            Orbit Live AI
+            Eburon Live AI
           </div>
           
           <div className="flex gap-4 items-start">

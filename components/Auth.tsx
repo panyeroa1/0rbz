@@ -88,7 +88,7 @@ const Auth: React.FC<AuthProps> = ({ onLogin }) => {
           </h2>
           <p className="text-gray-400 text-xl leading-relaxed">
             Breaking language barriers in real-time with Gemini Live. 
-            Experience conversation without limits.
+            Experience conversation without limits with Eburon.
           </p>
         </div>
       </div>
@@ -96,7 +96,7 @@ const Auth: React.FC<AuthProps> = ({ onLogin }) => {
       <div className="flex-1 flex items-center justify-center p-6 bg-zinc-950 relative">
         <div className="max-w-md w-full space-y-8">
           <div className="text-center">
-            <h2 className="text-3xl font-bold mb-2">Sign in to Orbit</h2>
+            <h2 className="text-3xl font-bold mb-2">Sign in to {BRAND_NAME}</h2>
             <p className="text-zinc-400">Join the next generation of meetings.</p>
           </div>
 
@@ -154,7 +154,7 @@ const Auth: React.FC<AuthProps> = ({ onLogin }) => {
           </div>
 
           <p className="text-center text-sm text-zinc-500 pt-4">
-            By continuing, you agree to Orbit's <a href="#" className="text-blue-500 hover:underline">Terms of Service</a> and <a href="#" className="text-blue-500 hover:underline">Privacy Policy</a>.
+            By continuing, you agree to Eburon's <a href="https://eburon.ai/terms" className="text-blue-500 hover:underline">Terms of Service</a> and <a href="https://eburon.ai/privacy" className="text-blue-500 hover:underline">Privacy Policy</a>.
           </p>
         </div>
       </div>
