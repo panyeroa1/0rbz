@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { 
   Mic, MicOff, Video, VideoOff, ScreenShare, 
   Users, Shield, PhoneOff, Maximize2, Sparkles, UserPlus, X, Copy, Check, MoreVertical,
-  Circle, Pause, Square, Download
+  Circle, Pause, Square, Download, Monitor
 } from 'lucide-react';
 import { User, MeetingConfig, TranscriptionEntry } from '../types';
 import { GEMINI_MODEL, BRAND_NAME } from '../constants';
@@ -62,6 +62,11 @@ const MeetingRoom: React.FC<MeetingRoomProps> = ({ user, config, onLeave }) => {
   const [isParticipantsOpen, setIsParticipantsOpen] = useState(false);
   const [copySuccess, setCopySuccess] = useState(false);
   
+  // Screen Sharing State
+  const [isSharingScreen, setIsSharingScreen] = useState(false);
+  const [screenAudioEnabled, setScreenAudioEnabled] = useState(true);
+  const [screenStream, setScreenStream] = useState<MediaStream | null>(null);
+
   // Recording State
   const [isRecording, setIsRecording] = useState(false);
   const [isRecordingPaused, setIsRecordingPaused] = useState(false);
@@ -73,6 +78,7 @@ const MeetingRoom: React.FC<MeetingRoomProps> = ({ user, config, onLeave }) => {
   ]);
 
   const videoRef = useRef<HTMLVideoElement>(null);
+  const screenShareVideoRef = useRef<HTMLVideoElement>(null);
   const inputAudioCtxRef = useRef<AudioContext | null>(null);
   const outputAudioCtxRef = useRef<AudioContext | null>(null);
   const audioDestinationRef = useRef<MediaStreamAudioDestinationNode | null>(null);
@@ -103,27 +109,68 @@ const MeetingRoom: React.FC<MeetingRoomProps> = ({ user, config, onLeave }) => {
     init();
     return () => {
       stopRecording();
+      stopScreenShare();
       if (sessionRef.current) sessionRef.current.close();
       if (inputAudioCtxRef.current) inputAudioCtxRef.current.close();
       if (outputAudioCtxRef.current) outputAudioCtxRef.current.close();
     };
   }, []);
 
+  // Screen Share Logic
+  const startScreenShare = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getDisplayMedia({
+        video: true,
+        audio: screenAudioEnabled
+      });
+      
+      setScreenStream(stream);
+      setIsSharingScreen(true);
+      
+      if (screenShareVideoRef.current) {
+        screenShareVideoRef.current.srcObject = stream;
+      }
+
+      // Handle user clicking "Stop Sharing" from browser UI
+      stream.getVideoTracks()[0].onended = () => {
+        stopScreenShare();
+      };
+    } catch (err) {
+      console.error("Error starting screen share:", err);
+      setIsSharingScreen(false);
+    }
+  };
+
+  const stopScreenShare = useCallback(() => {
+    if (screenStream) {
+      screenStream.getTracks().forEach(track => track.stop());
+      setScreenStream(null);
+    }
+    setIsSharingScreen(false);
+  }, [screenStream]);
+
+  const toggleScreenShare = () => {
+    if (isSharingScreen) {
+      stopScreenShare();
+    } else {
+      startScreenShare();
+    }
+  };
+
   // Recording Logic
   const startRecording = useCallback(() => {
     if (!localStreamRef.current || !outputAudioCtxRef.current) return;
 
-    // Create a destination for the AI audio to be mixed into the recording
     if (!audioDestinationRef.current) {
       audioDestinationRef.current = outputAudioCtxRef.current.createMediaStreamDestination();
     }
 
     const mixedStream = new MediaStream();
     
-    // Add local video track
-    localStreamRef.current.getVideoTracks().forEach(track => mixedStream.addTrack(track));
+    // Priority: If sharing screen, use screen video. Otherwise use camera.
+    const videoSourceStream = isSharingScreen && screenStream ? screenStream : localStreamRef.current;
+    videoSourceStream.getVideoTracks().forEach(track => mixedStream.addTrack(track));
     
-    // Create an audio context to mix the local mic and AI voice
     const mixContext = new AudioContext();
     const micSource = mixContext.createMediaStreamSource(localStreamRef.current);
     const aiSource = mixContext.createMediaStreamSource(audioDestinationRef.current.stream);
@@ -131,8 +178,13 @@ const MeetingRoom: React.FC<MeetingRoomProps> = ({ user, config, onLeave }) => {
     
     micSource.connect(destination);
     aiSource.connect(destination);
+
+    // If screen has audio, mix it in
+    if (isSharingScreen && screenStream && screenStream.getAudioTracks().length > 0) {
+      const screenAudioSource = mixContext.createMediaStreamSource(screenStream);
+      screenAudioSource.connect(destination);
+    }
     
-    // Add mixed audio track
     destination.stream.getAudioTracks().forEach(track => mixedStream.addTrack(track));
 
     const recorder = new MediaRecorder(mixedStream, { mimeType: 'video/webm;codecs=vp9,opus' });
@@ -168,7 +220,7 @@ const MeetingRoom: React.FC<MeetingRoomProps> = ({ user, config, onLeave }) => {
     timerIntervalRef.current = window.setInterval(() => {
       setRecordingTime(prev => prev + 1);
     }, 1000);
-  }, []);
+  }, [isSharingScreen, screenStream]);
 
   const pauseRecording = useCallback(() => {
     if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'recording') {
@@ -205,7 +257,6 @@ const MeetingRoom: React.FC<MeetingRoomProps> = ({ user, config, onLeave }) => {
     inputAudioCtxRef.current = inCtx;
     outputAudioCtxRef.current = outCtx;
 
-    // Create the destination for recording
     audioDestinationRef.current = outCtx.createMediaStreamDestination();
 
     const sessionPromise = ai.live.connect({
@@ -221,7 +272,7 @@ const MeetingRoom: React.FC<MeetingRoomProps> = ({ user, config, onLeave }) => {
         },
         systemInstruction: `You are Eburon AI, the core intelligence for the Eburon communication platform. 
         Your user is ${user.name}. The meeting target language nuance is ${config.targetLanguage}. 
-        Provide seamless translation and character-perfect transcription. Ensure output audio matches transcribed text precisely.`
+        Provide seamless translation and character-perfect transcription.`
       },
       callbacks: {
         onopen: () => {
@@ -252,52 +303,37 @@ const MeetingRoom: React.FC<MeetingRoomProps> = ({ user, config, onLeave }) => {
           scriptProcessor.connect(inCtx.destination);
         },
         onmessage: async (msg: LiveServerMessage) => {
-          // Handle Input Transcription (User speaking)
           if (msg.serverContent?.inputTranscription) {
             const text = msg.serverContent.inputTranscription.text;
             currentInputBuffer += text;
             setActiveTranscription(currentInputBuffer);
           }
-
-          // Handle Output Transcription (Model speaking)
           if (msg.serverContent?.outputTranscription) {
             const text = msg.serverContent.outputTranscription.text;
             currentOutputBuffer += text;
             setActiveTranscription(currentOutputBuffer);
           }
-
-          // Handle Model Audio Output
           const base64Audio = msg.serverContent?.modelTurn?.parts?.[0]?.inlineData?.data;
           if (base64Audio && outCtx && audioDestinationRef.current) {
             nextStartTimeRef.current = Math.max(nextStartTimeRef.current, outCtx.currentTime);
             const audioBuffer = await decodeAudioData(decode(base64Audio), outCtx, 24000, 1);
-            
             const source = outCtx.createBufferSource();
             source.buffer = audioBuffer;
-            
-            // Gain Node for smooth transitions (Eliminate Clicks)
             const gainNode = outCtx.createGain();
-            const rampTime = 0.01; // 10ms ramp
-            
+            const rampTime = 0.01;
             gainNode.gain.setValueAtTime(0, nextStartTimeRef.current);
             gainNode.gain.linearRampToValueAtTime(1, nextStartTimeRef.current + rampTime);
             gainNode.gain.setValueAtTime(1, nextStartTimeRef.current + audioBuffer.duration - rampTime);
             gainNode.gain.linearRampToValueAtTime(0, nextStartTimeRef.current + audioBuffer.duration);
-
             source.connect(gainNode);
-            // Connect to both speakers and recording destination
             gainNode.connect(outCtx.destination);
             gainNode.connect(audioDestinationRef.current);
-            
             source.start(nextStartTimeRef.current);
             nextStartTimeRef.current += audioBuffer.duration;
           }
-
-          // Handle Turn Completion
           if (msg.serverContent?.turnComplete) {
             const finalTxt = currentInputBuffer || currentOutputBuffer;
             const sender = currentInputBuffer ? 'user' : 'model';
-            
             if (finalTxt) {
               setTranscriptions(prev => [
                 ...prev, 
@@ -334,6 +370,8 @@ const MeetingRoom: React.FC<MeetingRoomProps> = ({ user, config, onLeave }) => {
     return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   };
 
+  const totalGridItems = participants.length + 1 + (isSharingScreen ? 1 : 0);
+
   return (
     <div className="h-screen w-full bg-[#050505] flex flex-col relative overflow-hidden select-none">
       
@@ -350,6 +388,22 @@ const MeetingRoom: React.FC<MeetingRoomProps> = ({ user, config, onLeave }) => {
                 <div className={`w-2 h-2 bg-red-500 rounded-full ${isRecordingPaused ? 'opacity-50' : 'animate-pulse'}`}></div>
                 <span className="text-xs font-black text-red-500 uppercase tracking-widest">REC {formatTime(recordingTime)}</span>
              </div>
+          )}
+
+          {isSharingScreen && (
+            <div className="bg-blue-500/10 backdrop-blur-xl border border-blue-500/20 px-4 py-2 rounded-2xl flex items-center gap-3 shadow-lg">
+              <Monitor className="w-4 h-4 text-blue-500" />
+              <span className="text-xs font-bold text-blue-500 uppercase tracking-widest">Sharing Screen</span>
+              <label className="flex items-center gap-2 ml-2 border-l border-blue-500/20 pl-3 cursor-pointer">
+                 <input 
+                  type="checkbox" 
+                  className="w-3 h-3 rounded bg-zinc-800 border-zinc-700 checked:bg-blue-600 focus:ring-0" 
+                  checked={screenAudioEnabled} 
+                  onChange={(e) => setScreenAudioEnabled(e.target.checked)}
+                />
+                 <span className="text-[10px] text-zinc-400">Audio</span>
+              </label>
+            </div>
           )}
 
           <div className="hidden sm:flex bg-black/40 backdrop-blur-xl border border-white/10 px-4 py-2 rounded-2xl items-center gap-3 shadow-lg">
@@ -370,9 +424,32 @@ const MeetingRoom: React.FC<MeetingRoomProps> = ({ user, config, onLeave }) => {
       </div>
 
       <div className="flex-1 flex w-full h-full overflow-hidden">
-        <div className={`flex-1 p-4 pb-28 pt-24 grid gap-4 transition-all duration-500 ease-in-out ${isParticipantsOpen ? 'pr-2' : ''} ${participants.length + 1 <= 1 ? 'grid-cols-1' : participants.length + 1 <= 2 ? 'grid-cols-1 md:grid-cols-2' : 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3'}`}>
+        <div className={`flex-1 p-4 pb-28 pt-24 grid gap-4 transition-all duration-500 ease-in-out ${isParticipantsOpen ? 'pr-2' : ''} ${totalGridItems <= 1 ? 'grid-cols-1' : totalGridItems <= 2 ? 'grid-cols-1 md:grid-cols-2' : 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3'}`}>
+          
+          {/* Screen Share Tile */}
+          {isSharingScreen && (
+            <div className="relative group overflow-hidden bg-zinc-900 rounded-3xl border border-blue-500/30 shadow-2xl h-full flex items-center justify-center col-span-1 md:col-span-2 lg:col-span-2 row-span-1 md:row-span-2">
+              <video 
+                ref={screenShareVideoRef} 
+                autoPlay 
+                playsInline 
+                className="w-full h-full object-contain rounded-3xl"
+              />
+              <div className="absolute bottom-4 left-4 bg-black/40 backdrop-blur-md px-3 py-1.5 rounded-xl border border-white/10 flex items-center gap-2">
+                <Monitor className="w-4 h-4 text-blue-400" />
+                <span className="text-sm font-semibold">Screen Share</span>
+              </div>
+              <button 
+                onClick={stopScreenShare}
+                className="absolute top-4 right-4 bg-red-500 text-white p-2 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+          )}
+
           {/* Local Participant */}
-          <div className="relative group overflow-hidden bg-zinc-900 rounded-3xl border border-white/5 shadow-2xl h-full flex items-center justify-center">
+          <div className={`relative group overflow-hidden bg-zinc-900 rounded-3xl border border-white/5 shadow-2xl h-full flex items-center justify-center ${isSharingScreen ? 'aspect-video md:aspect-auto' : ''}`}>
             <video 
               ref={videoRef} 
               autoPlay 
@@ -414,17 +491,19 @@ const MeetingRoom: React.FC<MeetingRoomProps> = ({ user, config, onLeave }) => {
           ))}
           
           {/* Invite Placeholder */}
-          <div 
-            onClick={toggleParticipants}
-            className="bg-zinc-900/40 border-2 border-dashed border-zinc-800 rounded-3xl flex items-center justify-center group cursor-pointer hover:border-blue-500/50 hover:bg-blue-500/5 transition-all duration-300"
-          >
-            <div className="text-center">
-              <div className="w-16 h-16 bg-zinc-800 group-hover:bg-blue-600/20 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-all duration-300">
-                <UserPlus className="text-zinc-500 group-hover:text-blue-500 w-8 h-8" />
+          {!isSharingScreen && (
+            <div 
+              onClick={toggleParticipants}
+              className="bg-zinc-900/40 border-2 border-dashed border-zinc-800 rounded-3xl flex items-center justify-center group cursor-pointer hover:border-blue-500/50 hover:bg-blue-500/5 transition-all duration-300"
+            >
+              <div className="text-center">
+                <div className="w-16 h-16 bg-zinc-800 group-hover:bg-blue-600/20 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-all duration-300">
+                  <UserPlus className="text-zinc-500 group-hover:text-blue-500 w-8 h-8" />
+                </div>
+                <p className="text-zinc-500 group-hover:text-blue-400 font-bold text-sm tracking-wide uppercase">Invite People</p>
               </div>
-              <p className="text-zinc-500 group-hover:text-blue-400 font-bold text-sm tracking-wide uppercase">Invite People</p>
             </div>
-          </div>
+          )}
         </div>
 
         {/* Participant List Sidebar */}
@@ -501,6 +580,8 @@ const MeetingRoom: React.FC<MeetingRoomProps> = ({ user, config, onLeave }) => {
         onStartRecording={startRecording}
         onPauseRecording={pauseRecording}
         onStopRecording={stopRecording}
+        isSharingScreen={isSharingScreen}
+        onScreenShareToggle={toggleScreenShare}
       />
     </div>
   );

@@ -3,7 +3,7 @@ import {
   Mic, MicOff, Video, VideoOff, ScreenShare, 
   MessageSquare, Users, Hand, Shield, Grid, 
   Settings, Smile, MoreVertical, Layout,
-  Circle, Pause, Square
+  Circle, Pause, Square, MonitorOff
 } from 'lucide-react';
 
 interface DockProps {
@@ -22,6 +22,10 @@ interface DockProps {
   onStartRecording: () => void;
   onPauseRecording: () => void;
   onStopRecording: () => void;
+
+  // Screen Share Props
+  isSharingScreen: boolean;
+  onScreenShareToggle: () => void;
 }
 
 const Dock: React.FC<DockProps> = ({ 
@@ -37,14 +41,16 @@ const Dock: React.FC<DockProps> = ({
   isRecordingPaused,
   onStartRecording,
   onPauseRecording,
-  onStopRecording
+  onStopRecording,
+  isSharingScreen,
+  onScreenShareToggle
 }) => {
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
 
   const items = [
     { id: 1, name: 'Mute', icon: isMuted ? MicOff : Mic, color: isMuted ? 'text-red-500' : 'text-white', action: onMuteToggle, bg: isMuted ? 'bg-red-500/10' : 'bg-transparent' },
     { id: 2, name: 'Video', icon: isVideoOff ? VideoOff : Video, color: isVideoOff ? 'text-red-500' : 'text-white', action: onVideoToggle, bg: isVideoOff ? 'bg-red-500/10' : 'bg-transparent' },
-    { id: 3, name: 'Share', icon: ScreenShare, color: 'text-white', action: () => {}, bg: 'bg-transparent' },
+    { id: 3, name: isSharingScreen ? 'Stop Sharing' : 'Share Screen', icon: isSharingScreen ? MonitorOff : ScreenShare, color: isSharingScreen ? 'text-blue-400' : 'text-white', action: onScreenShareToggle, bg: isSharingScreen ? 'bg-blue-500/10' : 'bg-transparent' },
     { id: 4, name: 'Layout', icon: Layout, color: 'text-white', action: () => {}, bg: 'bg-transparent' },
     { id: 5, name: 'Chat', icon: MessageSquare, color: 'text-white', action: () => {}, bg: 'bg-transparent', badge: 0 },
     { id: 6, name: 'People', icon: Users, color: isParticipantsActive ? 'text-blue-400' : 'text-white', action: onToggleParticipants, bg: isParticipantsActive ? 'bg-blue-500/10' : 'bg-transparent', badge: participantCount },
